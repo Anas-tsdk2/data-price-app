@@ -55,10 +55,31 @@ function validateDataProcessing(originalData, processedData) {
         return sum + parseFloat(row['Coef AppTags']);
     }, 0);
     
+    const noAppTagsCount = processedData.filter(row => 
+        row['Split App tags (raw)'] === 'No App Tags'
+    ).length;
+    
     const roundedSum = Math.round(coefficientSum * 1000000) / 1000000;
     
+    // Mise à jour de l'interface
+    const validationStats = document.getElementById('validationStats');
+    const originalVMCountElement = document.getElementById('originalVMCount');
+    const coefficientSumElement = document.getElementById('coefficientSum');
+    const noAppTagsCountElement = document.getElementById('noAppTagsCount');
+    const validationStatusElement = document.getElementById('validationStatus');
+    
+    validationStats.style.display = 'block';
+    originalVMCountElement.textContent = originalVMCount;
+    coefficientSumElement.textContent = roundedSum.toFixed(6);
+    noAppTagsCountElement.textContent = noAppTagsCount;
+    
     if (Math.abs(roundedSum - originalVMCount) > 0.000001) {
+        validationStatusElement.textContent = '❌ Erreur de validation';
+        validationStatusElement.className = 'validation-status error';
         throw new Error(`Erreur de validation : La somme des coefficients (${roundedSum}) ne correspond pas au nombre de VMs (${originalVMCount})`);
+    } else {
+        validationStatusElement.textContent = '✅ Validation réussie';
+        validationStatusElement.className = 'validation-status success';
     }
     
     return true;

@@ -32,6 +32,29 @@
                 <div id="fileName" class="file-name"></div>
                 <div id="status" class="status"></div>
             </div>
+
+            <!-- Nouvelle section de validation -->
+            <div id="validationStats" class="validation-stats" style="display: none;">
+                <h3>Statistiques de validation</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">VMs source :</span>
+                        <span id="originalVMCount" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Somme des coefficients :</span>
+                        <span id="coefficientSum" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Nombre de "No App Tags" :</span>
+                        <span id="noAppTagsCount" class="stat-value">0</span>
+                    </div>
+                </div>
+                <div class="validation-status">
+                    <span id="validationStatus">-</span>
+                </div>
+            </div>
+
             <div class="button-section">
                 <button id="processButton" class="primary-button" disabled>Traiter</button>
                 <button id="exportButton" class="secondary-button" disabled>Exporter</button>
