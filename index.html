@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Price App</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h2>Data Price App</h2>
+        </div>
+    </header>
+
+    <!-- Contenu principal -->
+    <div class="container">
+        <div class="app-card">
+            <div class="upload-zone" id="dropZone">
+                <img src="https://cdn-icons-png.flaticon.com/512/1092/1092220.png" alt="Upload Icon" class="upload-icon">
+                <p>Glissez votre fichier Excel ou CSV ici</p>
+                <p>ou</p>
+                <label for="fileInput" class="custom-file-upload">
+                    Choisir un fichier
+                </label>
+                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none;">
+            </div>
+            <div class="status-section">
+                <div id="fileName" class="file-name"></div>
+                <div id="status" class="status"></div>
+            </div>
+            <div class="button-section">
+                <button id="processButton" class="primary-button" disabled>Traiter</button>
+                <button id="exportButton" class="secondary-button" disabled>Exporter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>© 2025 - Développé par Anastasia Tsundyk</p>
+        </div>
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>
