@@ -49,6 +49,70 @@ function handleFileSelect(file) {
     statusDiv.textContent = 'Prêt à traiter';
 }
 
+function validateDataProcessing(originalData, processedData) {
+    const originalVMCount = originalData.length;
+    const coefficientSum = processedData.reduce((sum, row) => {
+        return sum + parseFloat(row['Coef AppTags']);
+    }, 0);
+    
+    const roundedSum = Math.round(coefficientSum * 1000000) / 1000000;
+    
+    if (Math.abs(roundedSum - originalVMCount) > 0.000001) {
+        throw new Error(`Erreur de validation : La somme des coefficients (${roundedSum}) ne correspond pas au nombre de VMs (${originalVMCount})`);
+    }
+    
+    return true;
+}
+
+function transformData(data) {
+    const result = [];
+    
+    data.forEach(row => {
+        // Cas 1: App tags (raw) est vide
+        if (!row['App tags (raw)'] || row['App tags (raw)'].trim() === '') {
+            // Sous-cas 1: App tags (CT) a une valeur
+            if (row['App tags (CT)'] && row['App tags (CT)'].trim() !== '') {
+                const appTagsCT = row['App tags (CT)'];
+                const tags = appTagsCT.split(',');
+                const nbrTags = tags.length;
+                const coef = 1 / nbrTags;
+
+                tags.forEach(tag => {
+                    const newRow = {...row};
+                    newRow['Split App tags (raw)'] = tag.trim();
+                    newRow['Nbr App Tags'] = nbrTags;
+                    newRow['Coef AppTags'] = coef.toFixed(9);
+                    result.push(newRow);
+                });
+            } 
+            // Sous-cas 2: App tags (CT) est aussi vide
+            else {
+                const newRow = {...row};
+                newRow['Split App tags (raw)'] = 'No App Tags';
+                newRow['Nbr App Tags'] = 1;
+                newRow['Coef AppTags'] = '1.000000000';
+                result.push(newRow);
+            }
+        }
+        // Cas 2: App tags (raw) a des valeurs
+        else {
+            const appTags = row['App tags (raw)'].split(',');
+            const nbrTags = appTags.length;
+            const coef = 1 / nbrTags;
+
+            appTags.forEach(tag => {
+                const newRow = {...row};
+                newRow['Split App tags (raw)'] = tag.trim();
+                newRow['Nbr App Tags'] = nbrTags;
+                newRow['Coef AppTags'] = coef.toFixed(9);
+                result.push(newRow);
+            });
+        }
+    });
+
+    return result;
+}
+
 function processFile() {
     const file = fileInput.files[0];
 
@@ -68,10 +132,18 @@ function processFile() {
         reader.onload = function(e) {
             try {
                 const text = e.target.result;
-                const data = parseCSV(text);
-                processedData = transformData(data);
-                statusDiv.textContent = 'Traitement terminé avec succès';
-                exportButton.disabled = false;
+                const originalData = parseCSV(text);
+                processedData = transformData(originalData);
+                
+                try {
+                    validateDataProcessing(originalData, processedData);
+                    statusDiv.textContent = 'Traitement terminé avec succès - Validation OK';
+                    exportButton.disabled = false;
+                } catch (validationError) {
+                    statusDiv.textContent = validationError.message;
+                    console.error(validationError);
+                    processButton.disabled = false;
+                }
             } catch (error) {
                 console.error('Error processing CSV file:', error);
                 statusDiv.textContent = 'Erreur lors du traitement du fichier';
@@ -97,7 +169,7 @@ function processFile() {
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
                 
                 const headers = jsonData[0];
-                const excelData = jsonData.slice(1).map(row => {
+                const originalData = jsonData.slice(1).map(row => {
                     const obj = {};
                     headers.forEach((header, index) => {
                         obj[header] = row[index] || '';
@@ -105,9 +177,17 @@ function processFile() {
                     return obj;
                 });
 
-                processedData = transformData(excelData);
-                statusDiv.textContent = 'Traitement terminé avec succès';
-                exportButton.disabled = false;
+                processedData = transformData(originalData);
+                
+                try {
+                    validateDataProcessing(originalData, processedData);
+                    statusDiv.textContent = 'Traitement terminé avec succès - Validation OK';
+                    exportButton.disabled = false;
+                } catch (validationError) {
+                    statusDiv.textContent = validationError.message;
+                    console.error(validationError);
+                    processButton.disabled = false;
+                }
             } catch (error) {
                 console.error('Error processing Excel file:', error);
                 statusDiv.textContent = 'Erreur lors du traitement du fichier';
@@ -115,10 +195,6 @@ function processFile() {
             }
         };
         reader.readAsArrayBuffer(file);
-    } else {
-        alert('Format de fichier non supporté. Utilisez CSV ou Excel.');
-        statusDiv.textContent = 'Format de fichier non supporté';
-        processButton.disabled = false;
     }
 }
 
@@ -136,28 +212,6 @@ function parseCSV(text) {
         });
         result.push(row);
     }
-    return result;
-}
-
-function transformData(data) {
-    const result = [];
-    
-    data.forEach(row => {
-        if (!row['App tags (raw)']) return;
-        
-        const appTags = row['App tags (raw)'].split(',');
-        const nbrTags = appTags.length;
-        const coef = 1 / nbrTags;
-
-        appTags.forEach(tag => {
-            const newRow = {...row};
-            newRow['Split App tags (raw)'] = tag.trim();
-            newRow['Nbr App Tags'] = nbrTags;
-            newRow['Coef AppTags'] = coef.toFixed(9);
-            result.push(newRow);
-        });
-    });
-
     return result;
 }
 
@@ -207,7 +261,6 @@ async function exportExcel(filename) {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Processed Data');
 
-    // Ajouter les en-têtes
     const headers = Object.keys(processedData[0]);
     worksheet.columns = headers.map(header => ({
         header: header,
@@ -215,10 +268,8 @@ async function exportExcel(filename) {
         width: 20
     }));
 
-    // Ajouter les données
     worksheet.addRows(processedData);
 
-    // Styler l'en-tête
     worksheet.getRow(1).eachCell((cell) => {
         cell.fill = {
             type: 'pattern',
@@ -237,7 +288,6 @@ async function exportExcel(filename) {
         };
     });
 
-    // Styler les lignes de données
     for (let i = 2; i <= worksheet.rowCount; i++) {
         const row = worksheet.getRow(i);
         row.eachCell((cell) => {
@@ -255,13 +305,11 @@ async function exportExcel(filename) {
         });
     }
 
-    // Ajouter les filtres
     worksheet.autoFilter = {
         from: { row: 1, column: 1 },
         to: { row: 1, column: headers.length }
     };
 
-    // Générer le fichier
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { 
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
