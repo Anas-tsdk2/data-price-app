@@ -1,59 +1,105 @@
-# Data Price App
+# Data Price App - Guide Complet
 
-Application web permettant de traiter des fichiers Excel et CSV pour le calcul de prix, avec un focus particulier sur le traitement des tags d'applications et la déduplication des données.
+## 1. Présentation générale
 
-## Fonctionnalités principales
+### Objectif de l'application
+Cette application résout un problème courant en gestion IT : la répartition des coûts des serveurs entre différentes applications. Quand un serveur héberge plusieurs applications, comment répartir équitablement son coût ?
 
-### Traitement des tags d'applications
-- Séparation automatique des tags multiples
-- Calcul du nombre total de tags par serveur
-- Génération d'un coefficient par tag (1/nombre total de tags)
-- Conservation des données d'origine dans une colonne "App tags (raw)"
+### Principe de fonctionnement
+- L'application prend en entrée un fichier contenant la liste des serveurs
+- Pour chaque serveur ayant plusieurs applications (tags), elle crée une ligne par application
+- Elle calcule automatiquement un coefficient de répartition des coûts
 
-### Déduplication intelligente
-- Création d'une ligne distincte pour chaque tag d'application
-- Conservation de toutes les informations du serveur (nom, statut, environnement, etc.)
-- Maintien de la traçabilité avec les données sources
+### Exemple concret
+Si un serveur "SRV" héberge 3 applications (P1, P2, P3) :
+- L'application créera 3 lignes distinctes
+- Chaque ligne aura un coefficient de 0.333333 (1/3)
+- La somme des coefficients égale toujours 1 pour garantir une répartition à 100%
 
-### Exemple de transformation
-Pour un serveur comme avec les tags "a,b,c" :
-- Création de 3 lignes distinctes
-- Calcul du coefficient (0.333333 = 1/3)
-- Conservation des métadonnées (statut, environnement, localisation, etc.)
+## 2. Utilisation pas à pas
 
-## Technologies utilisées
+### Étape 1 : Préparation du fichier
+Format accepté :
+- Excel (.xlsx, .xls)
+- CSV (séparateur point-virgule)
 
-- HTML5
-- CSS3
-- JavaScript
-- ExcelJS pour le traitement des fichiers Excel
-- SheetJS pour la manipulation des données tabulaires
+### Étape 2 : Import du fichier
+Deux méthodes :
+- Glisser-déposer le fichier dans la zone prévue
+- Cliquer sur la zone pour sélectionner le fichier
 
-## Installation et utilisation
+### Étape 3 : Traitement
+1. Cliquer sur "Traiter"
+2. L'application va :
+   - Séparer les tags multiples
+   - Calculer les coefficients
+   - Valider les données
+   - Afficher les statistiques
 
-1. Clonez le repository
-2. Ouvrez index.html dans votre navigateur
-3. Importez votre fichier Excel ou CSV via l'interface drag & drop
-4. Le traitement se fait automatiquement
-5. Téléchargez le fichier traité dans son format d'origine
+### Étape 4 : Validation
+L'application vérifie automatiquement :
+- Le nombre total de serveurs d'origine
+- La somme des coefficients
+- Le nombre de serveurs sans tags
+- L'intégrité des données
 
-## Format des données
+### Étape 5 : Export
+- Cliquer sur "Exporter"
+- Le fichier généré conserve le format d'origine
+- Les nouvelles colonnes sont ajoutées :
+  ```
+  App tags (CT)      : Tags traités
+  Nbr App Tags       : Nombre de tags par serveur
+  Coef AppTags       : Coefficient calculé
+  Split App tags     : Tag individuel
+  ```
 
-### Colonnes d'entrée requises
-- Server name
-- Server status
-- Environment
-- Administration company
-- Location
-- App tags (raw)
-- Service criticality
+## 3. Cas particuliers
 
-### Colonnes générées
-- App tags (CT)
-- Nbr App Tags
-- Coef AppTags
-- Split App tags (raw)
+### Serveur sans tags
+- Une seule ligne est créée
+- "Split App tags (raw)" = "No App Tags"
+- Coefficient = 1.000000000
 
-## Auteur
+### Tags dans App tags (CT)
+Si App tags (raw) est vide mais App tags (CT) contient des valeurs :
+- Les tags de App tags (CT) sont utilisés
+- Le traitement reste identique
 
-Anastasia Tsundyk - 2025
+## 4. Aspects techniques
+
+### Traitement des données
+- Séparation des tags par virgules
+- Nettoyage des espaces
+- Calcul précis des coefficients (9 décimales)
+- Validation mathématique des résultats
+
+### Format Excel
+- Conservation des filtres automatiques
+- Mise en forme conditionnelle
+- En-têtes en couleur
+- Alternance de couleurs pour les lignes
+
+### Format CSV
+- Séparateur point-virgule
+- Encodage UTF-8
+- Protection des valeurs avec guillemets
+
+## 5. Messages d'erreur courants
+
+- "Veuillez sélectionner un fichier" : Aucun fichier sélectionné
+- "Erreur de validation" : La somme des coefficients ne correspond pas
+- "Erreur lors du traitement" : Format de fichier incorrect
+
+## 6. Bonnes pratiques
+
+1. Vérifier le format des données avant import
+2. Attendre la fin du traitement avant export
+3. Contrôler les statistiques de validation
+4. Sauvegarder le fichier d'origine
+
+## 7. Support et maintenance
+
+Développé par : Anastasia Tsundyk
+Version : 2025
+Technologies : HTML5, CSS3, JavaScript, ExcelJS, SheetJS
